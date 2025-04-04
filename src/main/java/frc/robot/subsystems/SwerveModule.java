@@ -19,7 +19,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.Constants.ModuleConstants;
+import frc.robot.Constants.Module_KrakenConstants;;
 
 public class SwerveModule extends SubsystemBase {
   /** Creates a new SwerveModule. */
@@ -45,10 +45,10 @@ public class SwerveModule extends SubsystemBase {
     absolutedEncoder = new CANcoder(absolutedEncoder_ID);
     cancoderConfig = new CANcoderConfiguration();
 
-    turningPidController = new PIDController(ModuleConstants.turningPidController_Kp, ModuleConstants.turningPidController_Ki, ModuleConstants.turningPidController_Kd);
-    turningPidController.enableContinuousInput(ModuleConstants.pidRangeMin, ModuleConstants.pidRangeMax);
+    turningPidController = new PIDController(Module_KrakenConstants.turningPidController_Kp, Module_KrakenConstants.turningPidController_Ki, Module_KrakenConstants.turningPidController_Kd);
+    turningPidController.enableContinuousInput(Module_KrakenConstants.pidRangeMin, Module_KrakenConstants.pidRangeMax);
 
-    driveFeedForward = new SimpleMotorFeedforward(ModuleConstants.driveFeedforward_Ks, ModuleConstants.driveFeedforward_Kv);
+    driveFeedForward = new SimpleMotorFeedforward(Module_KrakenConstants.driveFeedforward_Ks, Module_KrakenConstants.driveFeedforward_Kv);
 
     turningConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     driveConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
@@ -81,7 +81,7 @@ public class SwerveModule extends SubsystemBase {
   }
 
   public double getDriveVelocity() {
-    return driveMotor.getVelocity().getValueAsDouble()*ModuleConstants.driveEncoderRot2Meter;
+    return driveMotor.getVelocity().getValueAsDouble()*Module_KrakenConstants.driveEncoderRot2Meter;
   }
 
   public double getDrivePosition() {
@@ -107,13 +107,12 @@ public class SwerveModule extends SubsystemBase {
 
   public void setState(SwerveModuleState state) {
     // Turn Motor
-      double goalAngleDeg = Math.toDegrees(Constants.optimate(getState().angle.getRadians(), state.angle.getRadians(), state.speedMetersPerSecond)[0]);
-      double speedMetersPerSecond = Constants.optimate(getState().angle.getRadians(), state.angle.getRadians(), state.speedMetersPerSecond)[1];
-      double turningMotorOutput = turningPidController.calculate(getState().angle.getDegrees(), goalAngleDeg);
-      turningMotor.set(turningMotorOutput);
+    state.optimize(getState().angle);
+    double turningMotorOutput = turningPidController.calculate(getState().angle.getDegrees(), state.angle.getDegrees());
+    turningMotor.set(turningMotorOutput);
     // Drive motor
-      double driveMotorOutput = driveFeedForward.calculate(speedMetersPerSecond)/12;
-      driveMotor.set(driveMotorOutput);
+    double driveMotorOutput = driveFeedForward.calculate(state.speedMetersPerSecond)/12;
+    driveMotor.set(driveMotorOutput);
   }
 
 
